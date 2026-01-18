@@ -149,7 +149,8 @@ Tradeoffs:
 ### Option 1: Docker-Based Deployment
 
 1. Clone the repository
-2. Build and start the application:
+2. create a .env file in backend/ like: GEMINI_API_KEY=your-api-key
+3. Build and start the application:
 
 ```
 docker compose up --build
@@ -177,8 +178,7 @@ python -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-export GEMINI_API_KEY=your_gemini_api_key_here
-uvicorn app.main:app --reload --port 8000
+create a .env file in backend/ and paste your api key like: GEMINI_API_KEY=your-api-key
 ```
 
 #### Frontend
