@@ -5,8 +5,9 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
-    environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    # Remove or comment out the environment section below
+    # environment:
+    #   - GEMINI_API_KEY=${GEMINI_API_KEY}
 
   frontend:
     build: ./frontend
