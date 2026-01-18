@@ -1,185 +1,137 @@
 # RAG Knowledge Base
 
-A production-style web application for saving notes/URLs and querying them with RAG (Retrieval-Augmented Generation). Built with FastAPI backend and React frontend.
-
-## Features
-
-- **Content Ingestion**: Save text notes or URLs (automatically fetches page content)
-- **Semantic Search**: Find relevant content using embeddings-based similarity search
-- **RAG Pipeline**: Get AI-powered answers with source citations
-- **Local Embeddings**: Uses `sentence-transformers` for free, offline embeddings
-- **Gemini LLM**: Uses Google Gemini API for answer generation
-
-## Tech Stack
-
-- **Backend**: FastAPI, SQLite, sentence-transformers, Google Gemini API
-- **Frontend**: React, Vite
-- **Database**: SQLite with JSON embeddings storage
-- **Deployment**: Docker Compose
+A production-style web application for saving notes and URLs, then querying them using Retrieval-Augmented Generation (RAG). The system uses a FastAPI backend and a React frontend, with local embeddings and a cloud LLM for answer generation.
 
 ---
 
-## Design Decisions & Tradeoffs
+## Features
+
+* Content ingestion: save text notes or URLs (page content is fetched automatically)
+* Semantic search using embeddings-based similarity
+* RAG pipeline with AI-generated answers and source context
+* Local embeddings using `sentence-transformers` (free and offline)
+* Google Gemini API for LLM-based answer generation
+
+---
+
+## Tech Stack
+
+* Backend: FastAPI, SQLite, sentence-transformers, Google Gemini API
+* Frontend: React, Vite
+* Database: SQLite with JSON-based embeddings storage
+* Deployment: Docker / Docker Compose or local development
+
+---
+
+## Design Decisions and Tradeoffs
 
 ### 1. Chunking Strategy
 
-**Decision**: Fixed-size word-based chunks (300 words) with 50-word overlap
+Fixed-size, word-based chunks (300 words) with a 50-word overlap.
 
-**Rationale**: 
-- Simple and predictable chunk sizes
-- Overlap ensures context isn't lost at chunk boundaries
-- Fast processing without complex semantic boundary detection
+- Overlap helps preserve context across chunk boundaries
+- Fast processing without complex parsing logic
 
-**Tradeoffs**:
-- ✅ Simple to implement and understand
-- ✅ Consistent chunk sizes make embeddings comparable
-- ❌ May split sentences/paragraphs mid-thought
-- ❌ Doesn't adapt to document structure
+Tradeoffs:
 
-**At Scale**: Consider sentence/paragraph-aware chunking (LangChain text-splitters) or semantic chunking for better context preservation.
+- Simple to implement and use
+- Does not adapt to document structure
 
 ---
 
 ### 2. Vector Storage
 
-**Decision**: SQLite with embeddings stored as JSON arrays
+SQLite with embeddings stored as JSON arrays.
 
-**Rationale**:
-- Single-file database, easy to backup/deploy
-- No additional services needed
-- Sufficient for single-user use case
-- Simple cosine similarity calculation with NumPy
+- Single-file database, easy to manage and back up
+- Straightforward cosine similarity computation using NumPy
 
-**Tradeoffs**:
-- ✅ Zero infrastructure overhead
-- ✅ Persistent storage out-of-the-box
-- ✅ Easy debugging (can inspect with sqlite3 CLI)
-- ❌ Full-table scans for similarity search (O(n))
-- ❌ Not optimized for high-dimensional vector operations
-- ❌ Limited to thousands of chunks efficiently
+Tradeoffs:
 
-**At Scale**: Migrate DB (Pinecone, Weaviate, Qdrant) or PostgreSQL with pgvector extension for better performance.
+- Not optimized for high-dimensional vector operations
+- Performance degrades beyond a few thousand chunks
 
 ---
 
 ### 3. Embeddings
 
-**Decision**: Local `sentence-transformers` model (`all-MiniLM-L6-v2`)
+Local `sentence-transformers` model (`all-MiniLM-L6-v2`).
 
-**Rationale**:
 - No API costs for embeddings
-- Works offline
-- Fast on CPU
-- Good quality for general text similarity
+- Fast enough on CPU for small to medium workloads
 
-**Tradeoffs**:
-- ✅ Free and unlimited
-- ✅ No network latency
-- ✅ No API rate limits
-- ❌ First-time download (~90MB model)
-- ❌ Slower than API embeddings for very large batches
-- ❌ Less specialized than domain-specific models
+Tradeoffs:
 
-**At Scale**: Batch processing, GPU acceleration, or API-based embeddings for better throughput.
+- Requires an initial model download (~90 MB)
+- Slower than hosted embedding APIs for very large batches
 
 ---
 
 ### 4. LLM Choice
 
-**Decision**: Google Gemini 2.5 Flash Lite via API
+Google Gemini 2.5 Flash Lite via API.
 
-**Rationale**:
-- Lightweight, cost-effective model
-- Good balance of speed and quality
-- API-based (no local model deployment complexity)
+- Lightweight and cost-effective
+- Good balance between speed and response quality
 
-**Tradeoffs**:
-- ✅ Fast responses
-- ✅ Lower cost than larger models
-- ✅ No local GPU requirements
-- ❌ Requires API key and internet connection
-- ❌ API per request
+Tradeoffs:
 
-**Alternative Considered**: Local LLM (llama.cpp) for complete offline functionality, but requires large model files and slower inference.
+- Requires an API key and internet access
+- Subject to API quotas and limits
+
+Alternative: A fully local LLM for offline usage. This was not chosen due to large model sizes and slower inference on CPU.
 
 ---
 
 ### 5. Database Schema
 
-**Decision**: Separate `items` and `chunks` tables with JSON embeddings
+Decision: Separate `items` and `chunks` tables, with embeddings stored as JSON.
 
-**Rationale**:
-- Normalized structure (items → chunks)
-- Easy to query items independently
-- Embeddings stored as JSON for simplicity
+- Normalized structure (one item maps to multiple chunks)
+- Clear separation of data
 
-**Tradeoffs**:
-- ✅ Clean separation of concerns
-- ✅ Can update/delete items and cascade to chunks
-- ❌ JSON parsing overhead for similarity search
-- ❌ Not optimal for vector operations
+Tradeoffs:
 
-**At Scale**: Consider specialized vector column types or separate embedding storage.
+- JSON parsing overhead during similarity search
+- Not optimal for vector-heavy workloads
 
 ---
 
 ### 6. Architecture
 
-**Decision**: Monolithic Docker container with both frontend and backend
+Decision: Monolithic setup where frontend and backend are deployed together.
 
-**Rationale**:
-- Single deployment unit
-- Simpler for local development
-- No network complexity between services
+Rationale:
 
-**Tradeoffs**:
-- ✅ Easy to deploy and test
-- ✅ Single container to manage
-- ❌ Tightly coupled services
-- ❌ Can't scale services t Scale**: Separate containers/services with proper service discovery for independent scaling.
+* Simple deployment and local development
+* Fewer moving parts for an MVP
+* No inter-service networking complexity
+
+Tradeoffs:
+
+* Easy to run and test
+* Single deployment unit
+* Frontend and backend are tightly coupled
+* Independent scaling is not possible
+
+At scale: Split frontend and backend into separate services or containers with proper service discovery.
 
 ---
 
 ### 7. Error Handling
 
-**Decision**: Basic error handling with HTTP status codes
+Decision: Basic error handling using HTTP status codes and FastAPI defaults.
 
-**Rationale**:
-- Simple and clear for MVP
-- FastAPI provides good error handling defaults
-- Logging for debugging
+Rationale:
 
-**Tradeoffs**:
-- ✅ Simple implementation
-- ✅ Clear error messages for users
-- ❌ Not comprehensive error recovery
-- ❌ Limited retry logic
+- Keeps the app simple
+- Errors are logged for debugging
 
-**At Scale**: Implement retry logic, circuit breakers, and comprehensive error monitoring.
+Tradeoffs:
 
----
-
-## What Breaks at Scale
-
-1. **Vector Search**: O(n) linear scan becomes slow with >100k chunks → Need indexed vector DB
-2. **Embedding Generation**: Sequential processing slow → Need batch/async processing
-3. **SQLite**: Concurrent writes limited → Need PostgreSQL or proper database
-4. **Single Container**: Can't scale services independently → Need microservices
-5. **No Caching**: Repeated queries hit DB/LLM → Need Redis/caching layer
-6. **No Authentication**: Singlemulti-user support
-
----
-
-## Production Considerations
-
-- **Vector DB**: Migrate to Pinecone/Weaviate/Qdrant
-- **Database**: PostgreSQL with pgvector
-- **Caching**: Redis for frequently accessed items
-- **Monitoring**: Logging, metrics, error tracking
-- **Rate Limiting**: Protect API endpoints
-- **Authentication**: Multi-user support
-- **Async Processing**: Background jobs for ingestion
-- **CDN**: Serve frontend assets via CDN
+- Clear and readable error responses
+- Limited retry or recovery logic
+- No advanced monitoring or alerting
 
 ---
 
@@ -187,30 +139,56 @@ A production-style web application for saving notes/URLs and querying them with 
 
 ### Prerequisites
 
-- Python 3.9+
-- Node.js 18+
-- Docker & Docker Compose (optional, for containerized deployment)
-- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+* Python 3.9 or newer
+* Node.js 18 or newer
+* Docker
+---
+
+## Deployment Options
+
+### Option 1: Docker-Based Deployment
+
+1. Clone the repository
+2. Build and start the application:
+
+```
+docker compose up --build
+```
+
+4. Access the application:
+
+* Backend: [http://localhost:8000]
+* Frontend: [http://localhost:5173]
+
+This approach avoids local dependency issues and keeps the environment consistent.
 
 ---
 
-## Local Development
+### Option 2: Local Development Setup
 
-### 1. Backend Setup
+Use this approach if you want full control or need to debug locally.
 
+#### Backend
+
+```
 cd backend
 
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 
-# Install dependencies
 pip install -r requirements.txt
-pip install google-generativeai
-
-# Set environment variable
 export GEMINI_API_KEY=your_gemini_api_key_here
-
-# Run the server
 uvicorn app.main:app --reload --port 8000
+```
 
+#### Frontend
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will be available at [http://localhost:5173] and will proxy API requests to the backend.
+
+---

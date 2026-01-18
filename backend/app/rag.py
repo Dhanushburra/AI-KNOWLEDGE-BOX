@@ -52,14 +52,13 @@
 #------------------------------------------------------------------------------------------------
 
 import os
-# from llama_cpp import Llama  # pyright: ignore[reportMissingImports]
 import google.generativeai as genai  # pyright: ignore[reportMissingImports]
 
 
 # Initialize Gemini API
 def _init_gemini():
     api_key = os.getenv("GEMINI_API_KEY")
-    api_key = "AIzaSyBUzuZt-m-NtmTzrKaZYm93epH-RbxbGhk"
+    api_key = "AIzaSyAmhpXlbEHrg2n7PeNfFpIZkV2k-7MDrS8"
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     genai.configure(api_key=api_key)

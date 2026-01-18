@@ -13,12 +13,6 @@ CREATE TABLE IF NOT EXISTS items (
 )
 """)
 
-# Add timestamp column to existing table if it doesn't exist
-try:
-    cursor.execute("ALTER TABLE items ADD COLUMN created_at TEXT")
-except sqlite3.OperationalError:
-    pass  # Column already exists
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS chunks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
