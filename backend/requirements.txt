@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+httpx
+beautifulsoup4
+numpy
+pydantic
+sentence-transformers
+llama-cpp-python
+google-generativeai
