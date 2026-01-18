@@ -149,8 +149,9 @@ Tradeoffs:
 ### Option 1: Docker-Based Deployment
 
 1. Clone the repository
-2. create a .env file in backend/ like: GEMINI_API_KEY=your-api-key
-3. Build and start the application:
+2. Go to https://aistudio.google.com/api-keys and create a new gemini api key
+3. create a .env file in backend/ like: GEMINI_API_KEY=your-api-key
+4. Build and start the application:
 
 ```
 docker compose up --build
@@ -178,6 +179,7 @@ python -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
+Go to https://aistudio.google.com/api-keys and create a new gemini api key
 create a .env file in backend/ and paste your api key like: GEMINI_API_KEY=your-api-key
 ```
 
