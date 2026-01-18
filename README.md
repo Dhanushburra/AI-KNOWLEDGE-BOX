@@ -169,6 +169,9 @@ This approach avoids local dependency issues and keeps the environment consisten
 ### Option 2: Local Development Setup
 
 Use this approach if you want full control or need to debug locally.
+Go to https://aistudio.google.com/api-keys and create a new gemini api key
+create a .env file in backend/ and paste your api key like: GEMINI_API_KEY=your-api-key
+
 
 #### Backend
 
@@ -179,8 +182,6 @@ python -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-Go to https://aistudio.google.com/api-keys and create a new gemini api key
-create a .env file in backend/ and paste your api key like: GEMINI_API_KEY=your-api-key
 ```
 
 #### Frontend
