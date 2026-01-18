@@ -54,13 +54,11 @@
 import os
 import google.generativeai as genai  # pyright: ignore[reportMissingImports]
 
-
 # Initialize Gemini API
 def _init_gemini():
     api_key = os.getenv("GEMINI_API_KEY")
-    api_key = "AIzaSyAmhpXlbEHrg2n7PeNfFpIZkV2k-7MDrS8"
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set")
+        raise ValueError("GEMINI_API_KEY environment variable not set. Please create a .env file with your API key.")
     genai.configure(api_key=api_key)
 
 def ask_llm(question, chunks):
